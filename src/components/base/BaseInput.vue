@@ -67,12 +67,12 @@ watch(text, (val) => emit('update:modelValue', val))
   align-items: center;
 }
 .input {
-  height: 50px;
+  height: 32px;
   width: 50vw;
   min-width: 300px;
   border: 2px #e8f0fe solid;
   outline: none;
-  font-size: 18px;
+  font-size: 16px;
   padding: 0 45px;
   border-radius: 8px;
   background: none;

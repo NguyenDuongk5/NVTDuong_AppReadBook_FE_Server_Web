@@ -14,9 +14,10 @@ import BaseInput from './BaseInput.vue'
 
 <style scoped>
 .search-icon {
-  background-image: url('@/assets/icon-search.svg');
-  background-size: contain;
+  background-image: url('../../assets/icon-search.svg');
+  background-size: 20px;
   background-repeat: no-repeat;
+  background-position: center;
   width: 25px;
   height: 25px;
   position: absolute;

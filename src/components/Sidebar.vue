@@ -4,7 +4,7 @@
         <div class="logo"></div>
         <h2 class="name-web" v-if="!collapsed">MangaAdmin</h2>
       </div>
-
+      
       <nav class="nav">
         <router-link to="/" class="nav-item">
           <div class="img logo-home"></div>
@@ -55,6 +55,15 @@ export default {
 
 .side-bar.collapsed {
   width: 60px;
+  padding: 10px;
+}
+
+.side-bar.collapsed .nav-item {
+  justify-content: center;
+}
+
+.side-bar.collapsed .img {
+  margin-right: 0;
 }
 
 .s {

@@ -4,7 +4,7 @@
     <div class="header">
       <h2>Quản lý truyện</h2>
       <!-- Nút thêm truyện -->
-      <BaseButton type="primary" @click="openForm = true">+ Thêm truyện</BaseButton>
+      <base-button type="primary" @click="openForm = true">+ Thêm truyện</base-button>
     </div>
     <!-- Bảng quản lý truyện -->
     <div class="manga-table">
@@ -31,94 +31,97 @@
       </table>
     </div>
     <!-- Form thêm truyện -->
-    <div v-if="openForm" class="popup-overlay" @click.self="closeForm">
-      <FormThemTruyen
-        v-if="openForm"
-        @refresh="loadMangas"
-        @close="closeForm"
-      />
-
+    <div v-show="openForm" class="popup-overlay" @click.self="closeForm">
+      <FormThemTruyen v-show="openForm" @refresh="loadMangas" @close="closeForm" />
     </div>
   </div>
 </template>
 
-<script setup>
+<script>
 import { ref, onMounted } from "vue";
 import BaseButton from "../components/base/BaseButton.vue";
-import FormThemTruyen from "../views/FormThemTruyen.vue";
+import FormThemTruyen from "@/views/FormThemTruyen.vue";
 import mangaApi from "../api/mangaApi";
 
-// Biến để điều khiển hiển thị form thêm truyện
-const openForm = ref(false);
+export default {
+  name: "QuanLyTruyen",
+  components: {
+    BaseButton,
+    FormThemTruyen,
+  },
 
-// Mảng lưu danh sách truyện lấy từ API
-const mangas = ref([]);
+  data() {
+    return {
+      openForm: false,
+      mangas: [],
+    };
+  },
 
-/**
- * Hàm loadMangas
- * - Mục đích: Tải danh sách truyện từ API khi component được mount hoặc sau khi thêm/xóa truyện
- * - Thực hiện gọi mangaApi.getAll() và lưu dữ liệu trả về vào biến mangas
- * - Bắt lỗi và log ra console nếu có sự cố
- * - author: NVTDuong
- * - date: 22/10/2025
- */
-async function loadMangas() {
-  try {
-    const res = await mangaApi.getAll();
-    mangas.value = res.data;
-  } catch (err) {
-    console.error("Lỗi tải danh sách truyện:", err);
-  }
-}
+  mounted() {
+    const me = this;
+    me.loadMangas();
+  },
 
-/**
- * Hàm handleSave
- * - Mục đích: Xử lý lưu truyện mới vào hệ thống
- * - Thực hiện gọi mangaApi.insert() với payload truyền vào
- * - Hiển thị thông báo thành công và tải lại danh sách truyện
- * - author: NVTDuong
- * - date: 22/10/2025
- * @param payload 
- */
-async function handleSave(payload) {
-  try {
-    await mangaApi.insert(payload);
-    alert("Đã thêm truyện mới!");
-    openForm.value = false;
-    loadMangas();
-  } catch (err) {
-    console.error("Lỗi khi lưu truyện:", err);
-  }
-}
+  methods: {
+    /**
+     * Tải danh sách truyện từ API
+     */
+    async loadMangas() {
+      try {
+        const me = this;
+        const res = await mangaApi.getAll();
+        me.mangas = res.data;
+      } catch (err) {
+        console.error("Lỗi tải danh sách truyện:", err);
+      }
+    },
 
-/**
-  * Hàm deleteManga
-  * - Mục đích: Xóa truyện theo ID
-  * - Thực hiện gọi mangaApi.delete() với ID truyền vào
-  * - Hiển thị thông báo xác nhận trước khi xóa
-  * - Tải lại danh sách truyện sau khi xóa thành công
-  * - author: NVTDuong
-  * - date: 22/10/2025
-  */
-async function deleteManga(id) {
-  if (!confirm("Bạn có chắc muốn xóa truyện này?")) return;
-  try {
-    await mangaApi.delete(id);
-    loadMangas();
-  } catch (err) {
-    console.error("Lỗi khi xóa truyện:", err);
-  }
-}
+    /**
+     * 
+     * @param payload 
+     */
+    async handleSave(payload) {
+      try {
+        let result = await mangaApi.insert(payload);
+        if(result.status !== 200) {
+          console.error("Lỗi khi lưu truyện:", result.message);
+          return;
+        }
+        else {
+          alert("Lưu truyện thành công!");
+        }
+        me.openForm = false;
+        await loadMangas();
+      } catch (err) {
+        console.error("Lỗi khi lưu truyện:", err);
+      }
+    },
 
-/**
- * Hàm closeForm
- * - Mục đích: Đóng form thêm truyện
- */
-function closeForm() {
-  openForm.value = false;
-}
-// Tải danh sách truyện khi component được mount
-onMounted(() => loadMangas());
+    /**
+     * Xoá truyện
+     * @param {string} id 
+     */
+    async deleteManga(id) {
+      if (!confirm("Bạn có chắc muốn xóa truyện này?")) return;
+      try {
+        await mangaApi.delete(id);
+        loadMangas();
+      } catch (err) {
+        console.error("Lỗi khi xóa truyện:", err);
+      }
+    },
+
+
+    /**
+     * Đóng form thêm truyện
+     */
+    closeForm() {
+      const me = this;
+      me.openForm = false;
+    },
+  },
+};
+
 </script>
 
 
@@ -134,10 +137,12 @@ onMounted(() => loadMangas());
   justify-content: space-between;
   align-items: center;
 }
+
 .header .base-btn {
   height: 36px;
-    padding: 0 16px;
+  padding: 0 16px;
 }
+
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -159,11 +164,12 @@ onMounted(() => loadMangas());
   overflow-y: auto;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
+
 .manga-table {
   margin-top: 20px;
   border-radius: 8px;
   overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .manga-table table {
@@ -205,5 +211,4 @@ onMounted(() => loadMangas());
   background-color: #dc2626;
   color: white;
 }
-
 </style>

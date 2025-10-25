@@ -20,6 +20,10 @@ defineProps({
     default: ''
   }
 })
+function tong(){
+
+}
+
 
 defineEmits(['click'])
 </script>
@@ -36,11 +40,14 @@ defineEmits(['click'])
         display: inline-block;  
         white-space: nowrap; 
         box-sizing: border-box;
+        
     }
     .base-btn.primary{
         border: 1px solid #007bff;
         color: #007bff;
+
     }
+
     .base-btn.success{
         background-color: #4CAF50;
     }
@@ -53,6 +60,7 @@ defineEmits(['click'])
     .base-btn:hover {
         opacity: 0.8;
     }
+
 
     
 </style>

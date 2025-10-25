@@ -9,6 +9,7 @@
       <img src="https://i.pravatar.cc/40" alt="user" />
       <span>Admin</span>
     </div>
+
   </div>
 </template>
 
@@ -38,9 +39,12 @@ export default {
 }
 .icon-bars{
   background-image: url('../assets/icon-bars.svg');
-  height: 30px;
-  width: 30px;
-  margin: 10px;
+  background-repeat: no-repeat;
+  width: 32px;
+  height: 32px;
+  background-size: 24px;
+  background-position: center;
+  cursor: pointer;
 }
 .base-btn.primary {
   border: 2px solid #e8f0fe !important;
