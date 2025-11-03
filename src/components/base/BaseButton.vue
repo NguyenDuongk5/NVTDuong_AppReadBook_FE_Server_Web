@@ -24,7 +24,6 @@ function tong(){
 
 }
 
-
 defineEmits(['click'])
 </script>
 <style scoped>
@@ -34,7 +33,6 @@ defineEmits(['click'])
         border-radius: 5px;
         cursor: pointer;
         margin: 5px;
-        font-family: 'Courier New', Courier, monospace;
         font-weight: bold;
         width: auto;             
         display: inline-block;  

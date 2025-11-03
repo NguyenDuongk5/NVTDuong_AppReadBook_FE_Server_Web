@@ -72,14 +72,12 @@ watch(text, (val) => emit('update:modelValue', val))
   min-width: 300px;
   border: 2px #e8f0fe solid;
   outline: none;
-  font-size: 16px;
   padding: 0 45px;
   border-radius: 8px;
   background: none;
   color: #333;
   margin: 20px;
   line-height: 50px;
-  padding-top: 4px;
 }
 .input-wrapper {
   position: relative;

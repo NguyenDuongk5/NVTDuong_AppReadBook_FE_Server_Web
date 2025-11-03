@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardContent from '../components/DashboardContent.vue'
-import QuanLyTruyen from '../views/QuanLyTruyen.vue'
+import QuanLyTruyen from '../views/ManageStories.vue'
 
 const routes = [
   { path: '/', name: 'home', component: DashboardContent },

@@ -14,45 +14,50 @@
     </div>
   </div>
 </template>
-<script setup>
+<script>
 import { ref, onMounted } from "vue";
-import mangaApi from "../api/mangaApi";
+import { mangaApi } from "../api/mangaApi"; // ✅ đúng
 
-// Biến thống kê
-const totalMangas = ref(0);
-const totalMangasToday = ref(0);
+export default {
+  name: "DashboardContent",
+  data() {
+    return {
+      totalMangas: 0,
+      totalMangasToday: 0,
+    };
+  },
+  mounted() {
+    const me = this;
+    me.loadStats();
+  },
+  methods: {
+    async loadStats() {
+      try {
+        const me = this;
+        // Gọi API lấy tổng số truyện
+        const resTotal = await mangaApi.count();
 
-// Hàm tải thống kê
-async function loadStats() {
-  try {
-    // Gọi API lấy tổng số truyện
-    const resTotal = await mangaApi.count();
+        // Gọi API lấy số truyện đăng trong ngày
+        const resToday = await mangaApi.countToday();
 
-    // Gọi API lấy số truyện đăng trong ngày
-    const resToday = await mangaApi.countToday();
-
-    totalMangas.value = resTotal.data;
-    totalMangasToday.value = resToday.data;
-
-    console.log("Thống kê:", {
-      total: resTotal.data,
-      today: resToday.data,
-    });
-  } catch (err) {
-    console.error("Lỗi tải thống kê:", err);
-  }
-}
-
-// Tự động gọi khi component load
-onMounted(() => {
-  loadStats();
-});
+        me.totalMangas = resTotal.data;
+        me.totalMangasToday = resToday.data;
+        console.log("Thống kê:", {
+          total: resTotal.data,
+          today: resToday.data,
+        });
+      } catch (err) {
+        console.error("Lỗi tải thống kê:", err);
+      }
+    },
+  },
+};
 </script>
 
 
 <style scoped>
 .content {
-  margin-top: 30px;
+  margin-top: 80px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;

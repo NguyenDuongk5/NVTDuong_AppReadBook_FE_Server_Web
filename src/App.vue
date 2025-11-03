@@ -2,28 +2,50 @@
   <div class="dashboard">
     <Sidebar :collapsed="isCollapsed" />
     <main class="main" :class="{ expanded: isCollapsed }">
-      <Topbar @toggle-sidebar="toggleSidebar" />
+      <Topbar :class="{ collapsed: isCollapsed }" @toggle-sidebar="toggleSidebar" />
       <router-view></router-view>
     </main>
   </div>
+  
+
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script>
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
 
-const isCollapsed = ref(false)
-
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-  console.log('Sidebar collapsed:', isCollapsed.value)
+export default {
+  name: 'App',
+  components: {
+    Sidebar,
+    Topbar,
+  },
+  data() {
+    return {
+      isCollapsed: false
+    }
+  },
+  methods: {
+    toggleSidebar() {
+      this.isCollapsed = !this.isCollapsed
+      console.log('Sidebar collapsed:', this.isCollapsed)
+    }
+  }
 }
 </script>
 
+
 <style src="./assets/main.css"></style>
 
-<style scoped>
+<style>
+/* Áp dụng font và cỡ chữ cho toàn trang admin */
+* {
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+}
+h2{
+  font-size: 20px;
+}
 .dashboard {
   display: flex;
 }
@@ -36,18 +58,14 @@ const toggleSidebar = () => {
 }
 
 .main.expanded {
-  margin-left: 80px; /* khi sidebar thu gọn */
+  margin-left: 60px; /* khi sidebar thu gọn */
+  padding: 0;
 }
 .side-bar.collapsed {
-  width: 80px;
+  width: 10px;
   align-items: center;
   padding: 20px 10px;
   
-}
-
-.side-bar.collapsed .nav-item {
-  justify-content: center;
-  padding: 12px 0;
 }
 
 .side-bar.collapsed .nav-item span {
@@ -60,6 +78,7 @@ const toggleSidebar = () => {
 
 .side-bar.collapsed .s {
   flex-direction: column;
+  padding-top: 10px ;
 }
 
 </style>

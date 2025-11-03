@@ -45,7 +45,7 @@ export default {
   position: fixed;
   left: 0;
   top: 0;
-  padding: 20px;
+  padding: 0 20px;
   display: flex;
   flex-direction: column;
   border-right: #e8f0fe solid 2px;
@@ -55,11 +55,12 @@ export default {
 
 .side-bar.collapsed {
   width: 60px;
-  padding: 10px;
+  padding: 0;
 }
 
 .side-bar.collapsed .nav-item {
   justify-content: center;
+  padding: 0 10px;
 }
 
 .side-bar.collapsed .img {
@@ -70,9 +71,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 40px;
+  height: 60px;
+  box-sizing: border-box;
 }
-
+span {
+  font-weight: bold;
+}
 .logo {
   width: 40px;
   height: 40px;
@@ -81,7 +85,7 @@ export default {
 
 .name-web {
   color: #2f5492;
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: bold;
 }
 
@@ -95,6 +99,7 @@ export default {
   text-decoration: none;
   color: #828292;
   padding: 15px;
+  height: 48px;
   border-radius: 8px;
   transition: 0.3s;
   display: flex;
