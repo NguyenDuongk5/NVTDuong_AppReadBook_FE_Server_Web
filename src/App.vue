@@ -1,8 +1,12 @@
 <template>
   <div class="dashboard">
+    <!-- Sidebar -->
     <Sidebar :collapsed="isCollapsed" />
+    <!-- Main -->
     <main class="main" :class="{ expanded: isCollapsed }">
+      <!-- Topbar -->
       <Topbar :class="{ collapsed: isCollapsed }" @toggle-sidebar="toggleSidebar" />
+      <!-- Content -->
       <router-view></router-view>
     </main>
   </div>
@@ -22,10 +26,16 @@ export default {
   },
   data() {
     return {
+      // trạng thái sidebar: false = mở, true = thu gọn
       isCollapsed: false
     }
   },
   methods: {
+    /**
+     * Phép đổi trạng thái sidebar
+     * author: NvtDuong
+     * createdDate: 03/11/25
+     */
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed
       console.log('Sidebar collapsed:', this.isCollapsed)

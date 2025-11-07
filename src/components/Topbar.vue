@@ -14,9 +14,9 @@
 </template>
 
 <script>
-import BaseInput from '../components/base/BaseInput.vue';
-import BaseButton from '../components/base/BaseButton.vue';
-import BaseSearch from './base/BaseSearch.vue';
+import BaseInput from '@/components/base/BaseInput.vue';
+import BaseButton from '@/components/base/BaseButton.vue';
+import BaseSearch from '@/components/base/BaseSearch.vue';
 export default {
   name: 'TopBar',
   components: {
@@ -49,6 +49,10 @@ export default {
   left: 60px;
 }
 
+.top-bar .base-btn {
+  border: 2px #e8f0fe solid !important;
+}
+
 .icon-bars{
   background-image: url('../assets/icon-bars.svg');
   background-repeat: no-repeat;
@@ -59,10 +63,6 @@ export default {
   cursor: pointer;
 }
 
-.base-btn.primary {
-  border: 2px solid #e8f0fe !important;
-  color: #e8f0fe;
-}
 .user-info {
   display: flex;
   align-items: center;

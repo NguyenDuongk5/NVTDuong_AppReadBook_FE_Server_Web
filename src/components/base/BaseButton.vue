@@ -33,7 +33,6 @@ defineEmits(['click'])
         border-radius: 5px;
         cursor: pointer;
         margin: 5px;
-        font-weight: bold;
         width: auto;             
         display: inline-block;  
         white-space: nowrap; 
@@ -41,19 +40,22 @@ defineEmits(['click'])
         
     }
     .base-btn.primary{
-        border: 1px solid #007bff;
-        color: #007bff;
-
+      border: 1px solid #007bff;
+      color: #007bff;
     }
 
     .base-btn.success{
-        background-color: #4CAF50;
+      border: 1px solid #4CAF50;
+      color: #4CAF50;
     }
     .base-btn.danger{
-        background-color: #f44336;
+      border: 1px solid #f44336;
+      color: #f44336;
+      
     }
     .base-btn.warning{
-        background-color: #ff9800;
+      border: 1px solid #ff9800;
+      color: #ff9800;
     }
     .base-btn:hover {
         opacity: 0.8;

@@ -115,7 +115,6 @@ span {
   width: 24px;
   height: 24px;
   margin-right: 10px;
-  margin-bottom: 5px;
 }
 
 .logo-home {

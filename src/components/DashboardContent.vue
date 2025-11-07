@@ -16,21 +16,30 @@
 </template>
 <script>
 import { ref, onMounted } from "vue";
-import { mangaApi } from "../api/mangaApi"; // ✅ đúng
+import  { mangaApi } from "@/api/mangaApi";
 
 export default {
   name: "DashboardContent",
   data() {
     return {
+      // biến lưu tổng số truyện
       totalMangas: 0,
+      // biến lưu số truyện đăng trong ngày
       totalMangasToday: 0,
     };
   },
   mounted() {
     const me = this;
+    // gọi hàm loadStats để lấy dữ liệu thống kê từ API
     me.loadStats();
   },
   methods: {
+    /**
+     * Lấy dữ liệu thống kê
+     * @returns
+     * author: NvtDuong
+     * createdDate: 26/06/2025
+     */
     async loadStats() {
       try {
         const me = this;
@@ -42,6 +51,8 @@ export default {
 
         me.totalMangas = resTotal.data;
         me.totalMangasToday = resToday.data;
+
+        // In ra thống kê
         console.log("Thống kê:", {
           total: resTotal.data,
           today: resToday.data,
@@ -73,8 +84,7 @@ export default {
 }
 
 .card h3 {
-  color: #2f5492
-;
+  color: #2f5492;
   margin-bottom: 10px;
 }
 

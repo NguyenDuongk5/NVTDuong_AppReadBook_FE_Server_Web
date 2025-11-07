@@ -76,7 +76,7 @@ watch(text, (val) => emit('update:modelValue', val))
   border-radius: 8px;
   background: none;
   color: #333;
-  margin: 20px;
+  margin:0 20px;
   line-height: 50px;
 }
 .input-wrapper {

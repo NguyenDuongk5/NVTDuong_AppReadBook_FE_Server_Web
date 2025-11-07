@@ -94,52 +94,50 @@ export default {
 
 <style scoped>
 .base-paging {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-    gap: 10px;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 0 0;
+  gap: 10px;
 }
 .page-btn {
-    background: #fff;
-    padding: 6px 10px;
-    cursor: pointer;
-    border: none;
-    transition: background 0.2s;
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
 }
 .icon-pre{
-    background-image: url(../../assets/up.svg);
-    background-size: 20px;
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 25px;
-    height: 25px;
-    transform: rotate(-90deg);
+  background-image: url(../../assets/up.svg);
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 25px;
+  height: 25px;
+  transform: rotate(-90deg);
 }
 .icon-next{
-    background-image: url(../../assets/up.svg);
-    background-size: 20px;
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 25px;
-    height: 25px;
-    transform: rotate(90deg);
+  background-image: url(../../assets/up.svg);
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 25px;
+  height: 25px;
+  transform: rotate(90deg);
 }
 button {
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 6px 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-    border: none;
-    color: #2f539291;
-    font-weight: bold;
-
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #2f539291;
+  font-weight: bold;
 }
 
 button:hover {
-    color: #2f5492;
+  color: #2f5492;
 }
 button.active {
-    color: #2f5492;
+  color: #2f5492;
 }
 </style>

@@ -5,6 +5,8 @@ export const mangaApi = {
 
   insert: (data) => axiosClient.post("/Manga/insert", data),
 
+  update: (data) => axiosClient.put("/Manga/update", data),
+
   delete: (id) =>
     axiosClient.delete("/Manga/delete", {
       data: id,

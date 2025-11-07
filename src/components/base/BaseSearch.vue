@@ -18,10 +18,10 @@ import BaseInput from './BaseInput.vue'
   background-size: 20px;
   background-repeat: no-repeat;
   background-position: center;
-  width: 25px;
-  height: 25px;
+  width: 24px;
+  height: 24px;
   position: absolute;
-  left: 25px;
+  left: 24px;
   top: 50%;
   transform: translateY(-50%);
   opacity: 0.8;

@@ -1,219 +1,245 @@
 <template>
-  <!-- -->
   <div class="manga-manager">
     <div class="header">
       <h2>Quản lý truyện</h2>
       <!-- Nút thêm truyện -->
-      <base-button type="primary" @click="openForm = true">+ Thêm truyện</base-button>
+      <base-button type="primary" @click="handleAddNew">+ Thêm truyện</base-button>
     </div>
+
     <!-- Bảng quản lý truyện -->
     <div class="manga-table">
-      <table class="">
+      <table>
         <thead>
-          <tr class="">
+          <tr>
             <th class="border">Tên truyện</th>
             <th class="border">Tác giả</th>
             <th class="border">Ngày tạo</th>
+            <th class="border">Thể loại</th>
             <th class="border">Ảnh bìa</th>
             <th class="border">Thao tác</th>
           </tr>
         </thead>
+        <!-- Danh sách truyện trong bảng -->
         <tbody>
           <tr v-for="m in mangas" :key="m.manga_id">
+            <!-- Tên truyện, tác giả, ngày tạo, thể loại, sẵn hình bìa-->
             <td class="border">{{ m.manga_title }}</td>
             <td class="border">{{ m.manga_author }}</td>
             <td class="border">{{ formatDate(m.created_date) }}</td>
+            <td class="border"> {{ m.category_names }}</td>
             <td class="border">
               <div class="img-cell">
                 <img :src="m.manga_image" alt="Ảnh truyện" class="img" />
-                <button @click="openImage(m.manga_image)" class="view-btn">Xem</button>
+                <base-button @click="openImage(m.manga_image)" class="view-btn">Xem</base-button>
               </div>
             </td>
-
+            <!-- Nút sửa / xóa -->
             <td class="border">
-              <button @click = "deleteManga(m.manga_id)" class="">Xóa</button>
+              <div class="btn-group">
+                <base-button type="primary" @click="editManga(m)">Sửa</base-button>
+                <base-button type="danger" @click="deleteManga(m.manga_id)">Xóa</base-button>
+              </div>
             </td>
           </tr>
-
         </tbody>
       </table>
-      </div>
-      <div class="pagination-example">
-        <base-paging
-          title="Danh sách truyện"
-          :total="total"
-          :page="pageSize"
-          @page-changed="onPageChange"
-        />
-      <!-- Popup xem ảnh -->
-      <div
-        v-if="showImage"
-        class="image-popup-overlay"
-        @click="closeImage"
-      >
-        <img
-          :src="selectedImage"
-          class="image-popup"
-        />
-      </div>
-
-
     </div>
-    <!-- Form thêm truyện -->
-    <div v-show="openForm" class="popup-overlay" @click.self="closeForm">
-      <AddStory v-show="openForm" @refresh="loadMangas" @close="closeForm" />
+
+    <!-- Phân trang -->
+    <div class="pagination-example">
+      <base-paging
+        title="Danh sách truyện"
+        :total="total"
+        :page="pageSize"
+        @page-changed="onPageChange"
+      />
+    </div>
+
+    <!-- Popup xem ảnh -->
+    <div v-if="showImage" class="image-popup-overlay" @click="closeImage">
+      <img :src="selectedImage" class="image-popup" />
+    </div>
+
+    <!-- Popup form thêm / sửa -->
+    <div v-if="openForm" class="popup-overlay" @click.self="closeForm">
+      <AddStory
+        :manga-data="editingManga"
+        @refresh="loadMangas"
+        @close="closeForm"
+      />
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
-import BaseButton from "../components/base/BaseButton.vue";
-import { mangaApi } from "../api/mangaApi";
-import BasePaging from '../components/base/BasePaging.vue'
+import BaseButton from "@/components/base/BaseButton.vue";
+import BasePaging from "@/components/base/BasePaging.vue";
+import AddStory from "@/views/AddStory.vue";
+import { mangaApi } from "@/api/mangaApi";
+import categoryApi from "@/api/categoryApi.js";
 
-import AddStory from "./AddStory.vue";  
+
 export default {
   name: "ManageStories",
   components: {
     BaseButton,
     AddStory,
-    BasePaging
+    BasePaging,
   },
 
   data() {
     return {
       openForm: false,
       mangas: [],
-      showImage: false,
-      selectedImage: null,
       total: 0,
       currentPage: 1,
-      pageSize: 7,
+      pageSize: 10,
+      showImage: false,
+      selectedImage: null,
+      editingManga: null,
     };
   },
 
-  mounted() {
+  async mounted() {
     const me = this;
-    me.loadMangas();
+    await me.loadMangas();
   },
+  
 
   methods: {
-    /**
-     * Tải danh sách truyện từ API
+    /** Tải danh sách truyện từ API, gắn tên thể loại cho từng truyện
+     * author: NvtDuong
+     * createdDate: 07/11/25
      */
-    // trong methods của ManageStories.vue
     async loadMangas() {
+      const me = this;
       try {
-        const res = await mangaApi.paging(this.currentPage, this.pageSize);
-        console.log('paging response:', res.data);
-        // Truy cập đúng tầng dữ liệu
-        this.mangas = res.data.data.data || []; 
-        this.total = res.data.total_record || res.data.data.total_record || 0;
+        // Gọi API song song: danh sách truyện + danh sách thể loại
+        const [res, categoryRes] = await Promise.all([
+          mangaApi.paging(me.currentPage, me.pageSize),
+          categoryApi.getAll()
+        ]);
+        // Lấy dữ liệu phân trang
+        const dataLayer = res.data.data || {};
+        me.mangas = dataLayer.data || res.data.data.data || [];
+        me.total = dataLayer.total_record || res.data.total_record || 0;
+
+        const categories = categoryRes.data || [];
+
+        // Map id -> tên thể loại
+        const categoryMap = {};
+        categories.forEach(c => {
+          categoryMap[c.category_id] = c.category_name;
+        });
+
+        // Gắn tên thể loại vào mỗi manga
+        me.mangas = me.mangas.map(m => {
+          if (m.list_category_id) {
+            const ids = m.list_category_id.split(",").filter(id => id); // tách string -> array
+            m.category_names = ids.map(id => categoryMap[id]).filter(Boolean).join(", "); // array -> string tên thể loại
+          } else {
+            m.category_names = "";
+          }
+          return m;
+        });
       } catch (err) {
         console.error("Lỗi tải danh sách truyện:", err);
       }
     },
+    
+
+    /** khi chuyển trang phân trang, cập nhật currentPage và tải lại danh sách truyện
+     * author: NvtDuong
+     * createdDate: 03/11/25
+     */
     async onPageChange(page) {
       const me = this;
       me.currentPage = page;
       await me.loadMangas();
     },
-    /**
-     * 
-     * @param payload 
+
+    /** Mở form thêm truyện mới
+     * author: NvtDuong
+     * createdDate: 03/11/25
      */
-    async handleSave(payload) {
-      try {
-        let result = await mangaApi.insert(payload);
-        if(result.status !== 200) {
-          console.error("Lỗi khi lưu truyện:", result.message);
-          return;
-        }
-        else {
-          alert("Lưu truyện thành công!");
-        }
-        me.openForm = false;
-        await loadMangas();
-      } catch (err) {
-        console.error("Lỗi khi lưu truyện:", err);
-      }
+    handleAddNew() {
+      const me = this;
+      me.editingManga = null;
+      me.openForm = true;
     },
 
-    /**
-     * Xoá truyện
-     * @param {string} id 
-     */
+    /** Sửa truyện 
+     * author: NvtDuong
+     * createdDate: 03/11/25
+    */
+    editManga(manga) {
+      const me = this;
+      me.editingManga = { ...manga,  };
+      me.openForm = true;
+    },
+
+    /** Xóa truyện 
+     * author: NvtDuong
+     * createdDate: 03/11/25
+    */
     async deleteManga(mangaId) {
       const me = this;
       if (!confirm("Bạn có chắc muốn xóa truyện này?")) return;
       try {
-        await mangaApi.delete(mangaId);
-        me.loadMangas();
+        const res = await mangaApi.delete(mangaId);
+        if (res.status === 200) {
+          alert("Xóa truyện thành công!");
+          // load lại danh sách sau khi xóa
+          await me.loadMangas();
+        } else {
+          alert("Xóa thất bại!");
+        }
       } catch (err) {
         console.error("Lỗi khi xóa truyện:", err);
+        alert("Không thể xóa truyện!");
       }
     },
 
-    /**
-     * Đóng form thêm truyện
-     */
+    /** Định dạng ngày giờ từ chuỗi ISO sang dạng: HH:MM - dd/MM/yyyy 
+     * author: NvtDuong
+     * createdDate: 03/11/25
+    */
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const d = new Date(dateString);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const MM = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${hh}:${mm} - ${dd}/${MM}/${yyyy}`;
+    },
+
+    /** Xem ảnh 
+     * author: NvtDuong
+     * createdDate: 03/11/25
+    */
+    openImage(imageUrl) {
+      const me = this;
+      me.selectedImage = imageUrl;
+      me.showImage = true;
+    },
+
+    /** Đóng ảnh 
+     * author: NvtDuong
+     * createdDate: 03/11/25
+    */
+    closeImage() {
+      const me = this;
+      me.showImage = false;
+      me.selectedImage = null;
+    },
+
+    /** Đóng form */
     closeForm() {
       const me = this;
       me.openForm = false;
-    },
-
-    /**
-   * Định dạng ngày giờ: giờ trước, ngày sau (vd: 14:35 - 30/10/2025)
-   */
-    formatDate(dateString) {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      return `${hours}:${minutes} - ${day}/${month}/${year}`;
-    },
-     /**
-     * Tạo URL ảnh (đường dẫn tuyệt đối đến file ảnh đã upload)
-     */
-    async handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append("file", file);
-      // await mangaApi.delete(mangaId);
-      try {
-        const res = await axios.post("https://localhost:7112/api/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        this.newManga.manga_image = res.data.url; // link ảnh thật từ backend
-        console.log("Ảnh đã upload:", res.data.url);
-      } catch (err) {
-        console.error("Lỗi upload ảnh:", err);
-      }
-    },
-
-    /** Mở popup xem ảnh */
-    openImage(imageUrl) {
-      console.log("Xem ảnh:", imageUrl);
-      this.selectedImage = imageUrl;
-      this.showImage = true;
-    },
-
-    /** Đóng popup ảnh */
-    closeImage() {
-      this.showImage = false;
-      this.selectedImage = null;
-    },
-
-    /** Đóng form thêm truyện */
-    closeForm() {
-      this.openForm = false;
+      me.editingManga = null;
     },
   },
 };
@@ -239,7 +265,10 @@ export default {
 .header .base-btn {
   height: 36px;
   padding: 0 16px;
+  font-weight: bold;
+  border: 2px #e8f0fe solid;
 }
+
 
 .popup-overlay {
   position: fixed;
@@ -278,10 +307,12 @@ export default {
 
 .manga-table {
   overflow-x: auto;
+  min-height: 528px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .manga-table table {
+  height: auto;
   width: 100%;
   border-collapse: collapse;
   background-color: #fff;
@@ -290,8 +321,7 @@ export default {
 .manga-table th {
   width: 100px;
   background: linear-gradient(to right, #dbeafe, #bfdbfe);
-  text-align: left;
-  padding: 12px;
+  text-align: center;
   border-bottom: 2px solid #e5e7eb;
   font-style: bold;
   color: #2f5492;
@@ -302,30 +332,20 @@ export default {
 
 .manga-table td {
   height: 48px;
-  text-align: center;
-  padding: 12px;
+  padding: 0 20px;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.manga-table tr:hover {
-  background-color: #eff6ff;
-  transition: 0.2s;
-}
 
 .manga-table button {
-  color: #dc2626;
-  border: 1px solid #dc2626;
   padding: 6px 10px;
   border-radius: 5px;
   background: transparent;
   cursor: pointer;
   transition: all 0.2s;
+
 }
 
-.manga-table button:hover {
-  background-color: #dc2626;
-  color: white;
-}
 .manga-thumbnail {
   width: 80px;
   height: 100px;
@@ -336,7 +356,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* khoảng cách giữa ảnh và nút */
+  gap: 8px;
 }
 
 .img {
@@ -347,20 +367,10 @@ export default {
   border: 1px solid #ccc;
 }
 
-.view-btn {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: 0.2s;
+.view-btn{
+  border: none !important;
 }
 
-.view-btn:hover {
-  background-color: #2563eb;
-}
 .image-popup-overlay {
   position: fixed;
   inset: 0;
@@ -379,5 +389,10 @@ export default {
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   object-fit: contain;
 }
-
+.btn-group{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  
+}
 </style>
