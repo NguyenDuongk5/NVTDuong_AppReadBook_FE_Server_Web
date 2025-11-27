@@ -37,17 +37,27 @@
               @change="handleFileChange" 
               style="display: none"
             />
-            <button type="button" class="upload-btn" @click="openFilePicker">Chọn ảnh</button>
-            <div class="upload-help">PNG / JPG / GIF — tối đa 5MB</div>
+            <BaseTooltip text="Chọn ảnh PNG/JPG/GIF, tối đa 5MB" position="top">
+              <button type="button" class="upload-btn" @click="openFilePicker">Chọn ảnh</button>
+            </BaseTooltip>
           </div>
           <!-- Nếu đã có ảnh thì hiển thị preview -->
           <div v-else class="upload-preview">
             <img :src="cover.preview || newManga.manga_image" alt="Cover preview" class="cover-thumb" />
             <div class="preview-actions">
-              <button type="button" @click="previewImage">Xem</button>
-              <button type="button" @click="downloadImage">Tải về</button>
-              <button type="button" class="danger" @click="removeImage">Xóa</button>
+              <BaseTooltip text="Xem ảnh bìa" position="top">
+                <button type="button" @click="previewImage">Xem</button>
+              </BaseTooltip>
+
+              <BaseTooltip text="Tải ảnh về máy" position="top">
+                <button type="button" @click="downloadImage">Tải về</button>
+              </BaseTooltip>
+
+              <BaseTooltip text="Xóa ảnh bìa" position="top">
+                <button type="button" class="danger" @click="removeImage">Xóa</button>
+              </BaseTooltip>
             </div>
+
           </div>
         </div>
       </div>
@@ -56,8 +66,9 @@
       <div class="form-row">
         <label>Thể loại:</label>
         <div class="checkbox-group">
+           <!-- API lấy tất cả thể loại -->
           <label v-for="category in categories" :key="category.category_id" class="checkbox-item">
-            <!-- Khi check checkbox, gọi handleCategoryChange -->
+            <!-- Khi check checkbox, mảng selectedCategories (chứa các ID thể loại đã chọn). -->
             <input
               type="checkbox"
               :value="category.category_id"
@@ -72,6 +83,7 @@
       <div class="form-row inline">
         <div>
           <label>Trạng thái:</label>
+          <!-- giúp tự ép kiểu sang số (0 hoặc 1). -->
           <select v-model.number="newManga.manga_status">
             <option :value="1">Đang phát hành</option>
             <option :value="0">Đã hoàn thành</option>
@@ -100,13 +112,20 @@
 
 <script>
 import BaseButton from "@/components/base/BaseButton.vue";
-import { mangaApi, uploadApi } from "@/api/mangaApi";
-import categoryApi from "@/api/categoryApi";
+import BaseTooltip from "@/components/base/BaseTooltip.vue";
+// import { useBaseDialog } from '@/components/baseDialog.vue';
+
+import { mangaApi, uploadApi, categoryApi } from "@/api";
+
 
 export default {
   name: "AddStory",
-  components: { BaseButton },
-  // nếu có data truyền vào => edit
+  components: { 
+    BaseButton, 
+    BaseTooltip,
+    // useBaseDialog 
+  },
+  // dữ liệu truyện được truyền vào (nếu sửa).
   props: {
     mangaData: {
       type: Object,
@@ -118,6 +137,7 @@ export default {
 
   data() {
     return {
+      // thông tin truyện
       newManga: {
         manga_id: "",
         manga_title: "",
@@ -132,22 +152,28 @@ export default {
         modified_by: "Admin",
         selectedCategories: [],
       },
+      // hình ảnh truyện
       cover: { file: null, preview: "" },
+      // danh sách thể loại
       categories: [],
+      // hien thi lightbox
       dialogVisible: false,
     };
   },
   
   computed: {
+    // Trả về true nếu đang sửa, false nếu thêm mới.
     isEdit() {
       const me = this;
       return !!me.mangaData;
     },
   },
 
+  // Khi component đuôc tạo, tạo biến categories và lây dữ liệu tất cả thể loại.
   async mounted() {
     const me = this;
     await me.loadCategories();
+    // Nếu có dữ liệu (mangaData) → nạp vào form (chế độ “sửa”).
     if (me.mangaData) me.fillFormData();
   },
 
@@ -155,7 +181,7 @@ export default {
     /**
      * gọi API lấy danh sách tất cả thể loại và lưu vào biến categories
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     async loadCategories() {
       const me = this;
@@ -170,14 +196,14 @@ export default {
     /**
      * Lưu dữ liệu với mã truyện
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     fillFormData() {
       const me = this;
       me.newManga = {
         ...me.mangaData,
         selectedCategories: me.mangaData.list_category_id
-        // tách chuỗi ID thành array 
+        // tách chuỗi ID thành mảng để checkbox hiển thị đúng
           ? me.mangaData.list_category_id.split(",")
           : [],
       };
@@ -188,7 +214,7 @@ export default {
     /**
      * mở cửa sổ chọn file khi click nút "Chọn ảnh"
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     openFilePicker() {
       const me = this;
@@ -198,10 +224,11 @@ export default {
     /**
      * Hàm xuất hình ảnh
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     handleFileChange(e) {
       const me = this;
+      // kiểm tra dữ liệu ảnh
       const file = e.target.files[0];
       if (!file) return;
       if (file.size > 5 * 1024 * 1024) {
@@ -217,7 +244,7 @@ export default {
     /**
      * Hàm upload ảnh len server
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     async uploadImage(file) {
       const me = this;
@@ -236,7 +263,7 @@ export default {
     /**
      * Hàm xóa ảnh
      * author: NvtDuong
-     * createdDate: 26/06/2025
+     * createdDate: 03/11/2025
      */
     removeImage() {
       const me = this;
@@ -260,7 +287,7 @@ export default {
       a.download = "cover";
       a.click();
     },
-
+    
     /** Lưu hoặc cập nhật truyện */
     async handleSaveManga() {
       const me = this;
@@ -314,6 +341,7 @@ export default {
   overflow: hidden; /* tránh cắt bo góc */
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* form */
@@ -348,6 +376,7 @@ export default {
 .form-row.inline { 
   display: flex; 
   gap: 16px; 
+  margin-bottom: 48px;
 }
 
 label { 
@@ -430,7 +459,12 @@ textarea {
   display: flex; 
   justify-content: flex-end; 
   gap: 10px; 
-  margin-top: 14px; 
+  position: absolute;
+  bottom: 0;
+  right: 20px;
+  padding: 10px 0;
+  width: 100%;
+  background-color: #fff;
 
 }
 .btn-group .base-btn {

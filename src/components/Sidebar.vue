@@ -1,39 +1,56 @@
 <template>
-    <aside class="side-bar" :class="{collapsed: collapsed }">
-      <div class="s">
-        <div class="logo"></div>
-        <h2 class="name-web" v-if="!collapsed">MangaAdmin</h2>
+  <aside class="side-bar" :class="{ collapsed: collapsed }">
+    <div class="s">
+      <div class="logo"></div>
+      <h2 class="name-web" v-if="!collapsed">MangaAdmin</h2>
+    </div>
+    
+    <nav class="nav">
+      <router-link to="/" class="nav-item">
+        <div class="img logo-home"></div>
+        <span v-if="!collapsed">Trang chủ</span>
+      </router-link>
+
+      <router-link to="/truyen" class="nav-item">
+        <div class="img logo-book"></div>
+        <span v-if="!collapsed">Quản lý truyện</span>
+      </router-link>
+
+      <!-- Chapter list -->
+      <div class="chapter-list" v-if="chapters && chapters.length">
+        <h4 v-if="!collapsed" class="chapter-title">Chapters</h4>
+        <ul>
+          <li v-for="c in chapters" :key="c.chapter_id"
+              :class="{ active: selectedChapter?.chapter_id === c.chapter_id }"
+              @click="$emit('select-chapter', c)">
+            <span v-if="!collapsed">{{ c.chapter_title }}</span>
+            <div v-else class="dot"></div>
+          </li>
+        </ul>
       </div>
-      
-      <nav class="nav">
-        <router-link to="/" class="nav-item">
-          <div class="img logo-home"></div>
-          <span v-if="!collapsed">Trang chủ</span>
-        </router-link>
 
-        <router-link to="/truyen" class="nav-item">
-          <div class="img logo-book"></div>
-          <span v-if="!collapsed">Quản lý truyện</span>
-        </router-link>
 
-        <a href="#" class="nav-item">
-          <div class="img logo-users"></div>
-          <span v-if="!collapsed">Quản lý người dùng</span>
-        </a>
-        <a href="#" class="nav-item">
-          <div class="img logo-setting"></div>
-          <span v-if="!collapsed">Cài đặt</span>
-        </a>
-      </nav>
-    </aside>
+      <a href="#" class="nav-item">
+        <div class="img logo-users"></div>
+        <span v-if="!collapsed">Quản lý người dùng</span>
+      </a>
+      <a href="#" class="nav-item">
+        <div class="img logo-setting"></div>
+        <span v-if="!collapsed">Cài đặt</span>
+      </a>
+    </nav>
+  </aside>
 </template>
 
 <script>
 export default {
   name: 'Sidebar',
   props: {
-    collapsed: Boolean
-  }
+    collapsed: Boolean,
+    chapters: Array,
+    selectedChapter: Object
+  },
+  emits: ['select-chapter']
 }
 </script>
 

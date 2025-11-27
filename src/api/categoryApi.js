@@ -1,8 +1,7 @@
-import axiosClient from "./axiosClient";
+import baseApi from "./baseApi";
 
 const categoryApi = {
-  // API lấy tất cả thể loại
-  getAll: () => axiosClient.get("/Category/all"),
+  getAll: () => baseApi.get("/Category/all"),
 };
 
 export default categoryApi;

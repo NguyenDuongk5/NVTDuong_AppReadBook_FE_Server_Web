@@ -43,13 +43,21 @@ export default {
       type: Number,
       default: 10,
     },
-  },
-  data() {
-    return {
-      currentPage: 1,
-    };
+    current: {
+      type: Number,
+      default: 1,
+    },
   },
   computed: {
+    currentPage: {
+      get() {
+        return this.current;          // Lấy currentPage từ parent
+      },
+      set(page) {
+        this.$emit("update:current", page);  // hỗ trợ v-model:current nếu cần
+        this.$emit("page-changed", page);    // emit sự kiện page-changed
+      },
+    },
     totalPages() {
       return Math.ceil(this.total / this.page);
     },
@@ -85,7 +93,6 @@ export default {
     changePage(page) {
       if (page === "..." || page < 1 || page > this.totalPages) return;
       this.currentPage = page;
-      this.$emit("page-changed", page);
     },
   },
 };
@@ -95,7 +102,7 @@ export default {
 <style scoped>
 .base-paging {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   padding: 10px 0 0 0;
   gap: 10px;
 }

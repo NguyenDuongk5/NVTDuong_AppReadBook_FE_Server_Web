@@ -1,10 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardContent from '../components/DashboardContent.vue'
 import QuanLyTruyen from '../views/ManageStories.vue'
+import ManageChapters from '../views/ChapterManager.vue'
 
 const routes = [
   { path: '/', name: 'home', component: DashboardContent },
   { path: '/truyen', name: 'truyen', component: QuanLyTruyen },
+  {
+    path: "/chapters/:mangaId",
+    name: "ChapterManager",
+    component: ManageChapters,
+    props: true,
+  }
+
+
+
+
 ]
 
 const router = createRouter({

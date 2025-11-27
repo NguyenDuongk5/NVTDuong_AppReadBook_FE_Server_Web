@@ -5,12 +5,12 @@
       <!-- Nút thêm truyện -->
       <base-button type="primary" @click="handleAddNew">+ Thêm truyện</base-button>
     </div>
-
     <!-- Bảng quản lý truyện -->
     <div class="manga-table">
       <table>
         <thead>
           <tr>
+            <th class="border">STT</th>
             <th class="border">Tên truyện</th>
             <th class="border">Tác giả</th>
             <th class="border">Ngày tạo</th>
@@ -21,15 +21,16 @@
         </thead>
         <!-- Danh sách truyện trong bảng -->
         <tbody>
-          <tr v-for="m in mangas" :key="m.manga_id">
+          <tr v-for="(m, index) in mangas" :key="m.manga_id" >
             <!-- Tên truyện, tác giả, ngày tạo, thể loại, sẵn hình bìa-->
-            <td class="border">{{ m.manga_title }}</td>
-            <td class="border">{{ m.manga_author }}</td>
-            <td class="border">{{ formatDate(m.created_date) }}</td>
-            <td class="border"> {{ m.category_names }}</td>
-            <td class="border">
+            <td class="border" style="text-align: center" @click="goToChapters(m)">{{ indexManga(index) }}</td>
+            <td class="border" @click="goToChapters(m)">{{ m.manga_title }}</td>
+            <td class="border" @click="goToChapters(m)">{{ m.manga_author }}</td>
+            <td class="border" @click="goToChapters(m)">{{ formatDate(m.created_date) }}</td>
+            <td class="border" @click="goToChapters(m)"> {{ m.category_names }}</td>
+            <td class="border" >
               <div class="img-cell">
-                <img :src="m.manga_image" alt="Ảnh truyện" class="img" />
+                <img :src="m.manga_image" alt="Ảnh truyện"  @click="openImage(m.manga_image)" class="img" />
                 <base-button @click="openImage(m.manga_image)" class="view-btn">Xem</base-button>
               </div>
             </td>
@@ -47,14 +48,19 @@
 
     <!-- Phân trang -->
     <div class="pagination-example">
+      <span class="pagination-info">
+        Hiển thị 
+        {{ startIndex }} - {{ endIndex }} / {{ total }}
+      </span>
       <base-paging
         title="Danh sách truyện"
         :total="total"
         :page="pageSize"
+        :current="currentPage"
         @page-changed="onPageChange"
       />
     </div>
-
+    
     <!-- Popup xem ảnh -->
     <div v-if="showImage" class="image-popup-overlay" @click="closeImage">
       <img :src="selectedImage" class="image-popup" />
@@ -75,8 +81,10 @@
 import BaseButton from "@/components/base/BaseButton.vue";
 import BasePaging from "@/components/base/BasePaging.vue";
 import AddStory from "@/views/AddStory.vue";
+import ChapterManager from "@/views/ChapterManager.vue";
 import { mangaApi } from "@/api/mangaApi";
 import categoryApi from "@/api/categoryApi.js";
+import { chapterApi } from "@/api/chapterApi";
 
 
 export default {
@@ -97,12 +105,28 @@ export default {
       showImage: false,
       selectedImage: null,
       editingManga: null,
+      index: 0,   // truyện đang chọn
     };
   },
 
   async mounted() {
     const me = this;
+    this.currentPage = Number(this.$route.query.page) || 1;
     await me.loadMangas();
+  },
+
+  /**
+   * Tạo biến startIndex, endIndex để hiển thị số truyện trong bảng
+   * author: NvtDuong
+   * createdDate: 25/11/2025
+   */
+  computed: {
+    startIndex() {
+      return (this.currentPage - 1) * this.pageSize + 1;
+    },
+    endIndex() {
+      return Math.min(this.currentPage * this.pageSize, this.total);
+    },
   },
   
 
@@ -146,16 +170,23 @@ export default {
         console.error("Lỗi tải danh sách truyện:", err);
       }
     },
-    
-
+    backToMangas() {
+      this.selectedManga = null;
+    },
     /** khi chuyển trang phân trang, cập nhật currentPage và tải lại danh sách truyện
      * author: NvtDuong
      * createdDate: 03/11/25
      */
     async onPageChange(page) {
-      const me = this;
-      me.currentPage = page;
-      await me.loadMangas();
+      this.currentPage = page;
+
+      // Cập nhật URL query
+      this.$router.push({
+        name: "truyen",
+        query: { page: page }
+      });
+
+      await this.loadMangas();
     },
 
     /** Mở form thêm truyện mới
@@ -241,6 +272,19 @@ export default {
       me.openForm = false;
       me.editingManga = null;
     },
+    goToChapters(manga) {
+      this.$router.push({
+        name: "ChapterManager",
+        params: { mangaId: manga.manga_id },
+        query: { 
+          title: manga.manga_title ,
+          page: this.currentPage
+        },
+      });
+    },
+    indexManga(index) {
+      return (this.currentPage - 1) * this.pageSize + index + 1;
+    }
   },
 };
 
@@ -319,7 +363,7 @@ export default {
 }
 
 .manga-table th {
-  width: 100px;
+  width: fit-content;
   background: linear-gradient(to right, #dbeafe, #bfdbfe);
   text-align: center;
   border-bottom: 2px solid #e5e7eb;
@@ -330,13 +374,23 @@ export default {
 
 }
 
+
 .manga-table td {
   height: 48px;
   padding: 0 20px;
   border-bottom: 1px solid #e5e7eb;
 }
 
-
+.manga-table tr:nth-child(even) {
+  background-color: #f0f6fc;
+}
+.manga-table tr:hover{
+  background-color: #cadcfa;
+  cursor: pointer;
+}
+.manga-table thead tr:hover{
+  cursor:default !important;
+}
 .manga-table button {
   padding: 6px 10px;
   border-radius: 5px;
@@ -365,6 +419,8 @@ export default {
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid #ccc;
+  background: #fff;
+  text-align: center;
 }
 
 .view-btn{
@@ -393,6 +449,13 @@ export default {
   display: flex;
   gap: 8px;
   justify-content: center;
-  
+}
+.pagination-example{
+  display: flex;
+  justify-content: space-between;
+}
+.pagination-info{
+  padding: 10px;
+  align-items: center;
 }
 </style>

@@ -1,13 +1,29 @@
+<!-- 
+  1. props – Dữ liệu cha → con: Component cha truyền dữ liệu xuống component con.
+  2. emit – Dữ liệu con → cha
+  3. data() – Nội bộ của component: Đây là dữ liệu local, chỉ dùng trong component đó.
+  4. computed – Giá trị tự động tính lại Computed không tự set, chỉ đọc. Nó chạy lại khi dữ liệu liên quan thay đổi.
+  5. methods – Hàm xử lý: Chứa hành vi của component.
+-->
 <template>
   <div class="dashboard">
     <!-- Sidebar -->
-    <Sidebar :collapsed="isCollapsed" />
+    <Sidebar
+      :collapsed="isCollapsed"
+      :chapters="chapters"
+      :selectedChapter="selectedChapter"
+      @select-chapter="selectChapter"
+    />
     <!-- Main -->
     <main class="main" :class="{ expanded: isCollapsed }">
       <!-- Topbar -->
       <Topbar :class="{ collapsed: isCollapsed }" @toggle-sidebar="toggleSidebar" />
       <!-- Content -->
-      <router-view></router-view>
+      <router-view
+        :chapters="chapters"
+        :selectedChapter="selectedChapter"
+        @select-chapter="selectChapter"
+      ></router-view>
     </main>
   </div>
   
@@ -17,6 +33,7 @@
 <script>
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
+import chapterApi from './api/chapterApi' // nhớ import API
 
 export default {
   name: 'App',
@@ -39,7 +56,17 @@ export default {
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed
       console.log('Sidebar collapsed:', this.isCollapsed)
-    }
+    },
+    async loadChapters() {
+      try {
+        const res = await chapterApi.getAll();
+        // lọc theo mangaId
+        this.chapters = (res.data || []).filter(c => c.manga_id === this.mangaId);
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách chapter:", err);
+      }
+    },
+
   }
 }
 </script>

@@ -1,36 +1,23 @@
-import axiosClient from "./axiosClient";
+import baseApi from "./baseApi";
 
 export const mangaApi = {
-  getAll: () => axiosClient.get("/Manga/all"),
+  getAll: () => baseApi.get("/Manga/all"),
 
-  insert: (data) => axiosClient.post("/Manga/insert", data),
+  insert: (data) => baseApi.post("/Manga/insert", data),
 
-  update: (data) => axiosClient.put("/Manga/update", data),
+  update: (data) => baseApi.put("/Manga/update", data),
 
-  delete: (id) =>
-    axiosClient.delete("/Manga/delete", {
-      data: id,
-      headers: { "Content-Type": "application/json" },
-    }),
+  delete: (id) => baseApi.delete("/Manga/delete", id),
 
-  count: () => axiosClient.get("/Manga/count"),
+  count: () => baseApi.get("/Manga/count"),
 
-  countToday: () => axiosClient.get("/Manga/count-today"),
+  countToday: () => baseApi.get("/Manga/count-today"),
 
   paging: (page, pageSize = 10, column = "", param = "") =>
-    axiosClient.post("/Manga/paging", {
+    baseApi.post("/Manga/paging", {
       column,
       param,
       page,
       take: pageSize,
-    }),
-
-};
-
-
-export const uploadApi = {
-  uploadImage: (formData) =>
-    axiosClient.post("/Upload/upload-image", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
     }),
 };
