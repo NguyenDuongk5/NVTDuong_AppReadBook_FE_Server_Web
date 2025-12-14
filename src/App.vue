@@ -13,16 +13,23 @@
       :chapters="chapters"
       :selectedChapter="selectedChapter"
       @select-chapter="selectChapter"
+      @reload-truyen="reloadTruyen"
     />
     <!-- Main -->
     <main class="main" :class="{ expanded: isCollapsed }">
       <!-- Topbar -->
-      <Topbar :class="{ collapsed: isCollapsed }" @toggle-sidebar="toggleSidebar" />
+      <Topbar 
+        :class="{ collapsed: isCollapsed }" 
+        @toggle-sidebar="toggleSidebar"
+        @search="onSearch"
+      />
+      
       <!-- Content -->
       <router-view
         :chapters="chapters"
         :selectedChapter="selectedChapter"
-        @select-chapter="selectChapter"
+        :keyword="searchKeyword"
+        @search="onSearch"
       ></router-view>
     </main>
   </div>
@@ -33,7 +40,7 @@
 <script>
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
-import chapterApi from './api/chapterApi' // nhớ import API
+import chapterApi from './api/chapterApi' 
 
 export default {
   name: 'App',
@@ -42,20 +49,35 @@ export default {
     Topbar,
   },
   data() {
-    return {
-      // trạng thái sidebar: false = mở, true = thu gọn
-      isCollapsed: false
+  return {
+      searchKeyword: "",
+      isCollapsed: false,
+      chapters: [],          // <--- khai báo chapters
+      selectedChapter: null, // <--- khai báo selectedChapter
+      mangaId: null,         // nếu muốn load chapters theo manga, set id ở đây
+    };
+},
+
+  methods: {
+    reloadTruyen() {
+    // Nếu đang ở /truyen → chỉ reload data
+    if (this.$route.name === "truyen") {
+      this.$refs.truyenPage?.loadMangas();
     }
   },
-  methods: {
+    selectChapter(chapter) {
+    this.selectedChapter = chapter;
+  },
+    onSearch(keyword) {
+      this.searchKeyword = keyword || "";
+    },
     /**
      * Phép đổi trạng thái sidebar
      * author: NvtDuong
      * createdDate: 03/11/25
      */
     toggleSidebar() {
-      this.isCollapsed = !this.isCollapsed
-      console.log('Sidebar collapsed:', this.isCollapsed)
+      this.isCollapsed = !this.isCollapsed;
     },
     async loadChapters() {
       try {
@@ -66,6 +88,12 @@ export default {
         console.error("Lỗi khi tải danh sách chapter:", err);
       }
     },
+
+
+  onSearch(keyword) {
+    this.searchKeyword = keyword || ""; // cập nhật keyword tìm kiếm
+  }
+
 
   }
 }

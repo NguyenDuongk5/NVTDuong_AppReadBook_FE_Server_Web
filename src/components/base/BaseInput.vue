@@ -92,7 +92,7 @@ watch(text, (val) => emit('update:modelValue', val))
   height: 20px;
   position: absolute;
   top: 50%;
-  right: 30px;
+  right: 0px;
   transform: translateY(-50%);
   cursor: pointer;
 }

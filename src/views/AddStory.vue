@@ -108,13 +108,13 @@
       <img :src="cover.preview || newManga.manga_image" alt="Cover preview" class="cover-thumb" />
     </div>
   </div>
+  
 </template>
 
 <script>
 import BaseButton from "@/components/base/BaseButton.vue";
 import BaseTooltip from "@/components/base/BaseTooltip.vue";
-// import { useBaseDialog } from '@/components/baseDialog.vue';
-
+import BaseDialog from "@/components/base/BaseDialog.vue";
 import { mangaApi, uploadApi, categoryApi } from "@/api";
 
 
@@ -123,7 +123,7 @@ export default {
   components: { 
     BaseButton, 
     BaseTooltip,
-    // useBaseDialog 
+    BaseDialog
   },
   // dữ liệu truyện được truyền vào (nếu sửa).
   props: {
@@ -131,6 +131,7 @@ export default {
       type: Object,
       default: null,
     },
+    
   },
   
   emits: ["close", "refresh"],
@@ -158,6 +159,9 @@ export default {
       categories: [],
       // hien thi lightbox
       dialogVisible: false,
+      showDialog: false,
+      dialogMessage: "",
+      dialogType:"success",
     };
   },
   
@@ -286,6 +290,7 @@ export default {
       a.href = me.cover.preview || me.newManga.manga_image;
       a.download = "cover";
       a.click();
+      
     },
     
     /** Lưu hoặc cập nhật truyện */
@@ -314,10 +319,13 @@ export default {
           res = await mangaApi.insert(payload);
         }
         // lưu truyện
+        // alert(me.isEdit ? "Cập nhật thành công!" : "Thêm truyện thành công!");
         if (res.status === 200) {
-          alert(me.isEdit ? "Cập nhật thành công!" : "Thêm truyện thành công!");
-          me.$emit("close");
-          me.$emit("refresh");
+          this.$emit("refresh");
+          this.$emit("close", {
+            message: this.isEdit ? "Cập nhật thành công!" : "Thêm truyện thành công!",
+            type: "success"
+          });
         }
       } catch (err) {
         console.error("Lỗi lưu truyện:", err);

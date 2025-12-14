@@ -4,7 +4,11 @@
       <div class="icon-bars"></div>
     </BaseButton>
 
-    <BaseSearch />
+    <BaseSearch
+      v-model="keywordLocal"
+      @search="onSearch"
+    />
+
     <div class="user-info">
       <img src="https://i.pravatar.cc/40" alt="user" />
       <span>Admin</span>
@@ -24,7 +28,32 @@ export default {
     BaseButton,
     BaseSearch,
   },
-  emits: ['toggle-sidebar'],
+  props: {
+    keyword: {
+      type: String,
+      default: ""
+    }
+  },
+  watch: {
+    keyword: {
+      immediate: true,
+      keyword(val) {
+        this.keywordLocal = val;
+      }
+    }
+  },
+  data() {
+    return {
+      searchText: "",
+      keywordLocal: this.keyword
+    };
+  },
+  methods: {
+      onSearch() {
+    this.$emit("search", this.keywordLocal);
+  }
+
+  }
 }
 </script>
 <style>

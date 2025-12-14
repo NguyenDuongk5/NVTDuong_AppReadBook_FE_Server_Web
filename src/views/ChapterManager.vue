@@ -50,12 +50,9 @@
         <div class="actions">
           <div class="btn-back" @click="goBack"> Quay lại</div>
           <div class="btn-group" >              
-              <BaseDialog
-                label="Lưu"
-                message="Lưu chapter thành công!"
-                typeDialog="success"
-                @clicked="saveChapter"
-              />
+              <button type="submit" class="btn-save">
+                {{ selectedChapter ? 'Cập nhật' : 'Lưu' }}
+              </button>
               <button type="button" class="btn-cancel" @click="cancelEdit">Hủy</button>
               <button
                 v-if="selectedChapter"
@@ -69,25 +66,31 @@
       </form>
     </section>
   </div>
+   <BaseDialog
+    v-model:show="showDialog"
+    :message="dialogMessage"
+    :typeDialog="dialogType"
+  />
 </template>
 
 <script>
 import chapterApi from "@/api/chapterApi";
 import {mangaApi} from "@/api/mangaApi";
-import BaseDialog from "@/components/base/BaseDialog.vue";
+import  BaseDialog  from "@/components/base/BaseDialog.vue";
 
 
 export default {
   name: "ChapterManager",
   components: {
-    BaseDialog
+    BaseDialog,
   },
   props: [
     // ID của truyện muốn xem/chỉnh sửa chapters.
-    "mangaId",
-
-    
+    "mangaId",    
   ],
+  emits: ["selectChapter"],
+
+
 
   data() {
     return {
@@ -98,6 +101,9 @@ export default {
         chapter_title: "",
         chapter_content: "",
       },
+      showDialog: false,
+      dialogMessage: "",
+      dialogType:"success",
     };
   },
   /**
@@ -124,19 +130,14 @@ export default {
      * createdDate: 20/11/25
      */
     async loadManga() {
-      try {
-        const me = this;
-        const res = await mangaApi.getAll();       // lấy toàn bộ manga từ be
-        const manga = res.data.find(m => m.manga_id === me.mangaId);  // lọc theo mangaId
-        if (manga) {
-          me.mangaTitle = manga.manga_title;
-        } else {
-          me.mangaTitle = "Không tìm thấy truyện";
-        }
-      } catch (error) {
-        console.error("Lỗi load manga:", error);
-      }
-    },
+  try {
+    const res = await mangaApi.getById(this.mangaId);
+    this.mangaTitle = res.data.manga_title;
+  } catch (err) {
+    console.error(err);
+    this.mangaTitle = "Không tìm thấy truyện";
+  }
+},
 
     /**
      * Lấy danh sách chapter
@@ -213,12 +214,15 @@ export default {
             modified_date: now,
             modified_by: user,
           });
-
-
           // Update giao diện
           me.selectedChapter.chapter_title = me.form.chapter_title;
           me.selectedChapter.chapter_content = me.form.chapter_content;
-  
+
+           // Hiển thị dialog thành công
+          me.dialogMessage = "Cập nhật chapter thành công!";
+          me.dialogType = "success";
+          me.showDialog = true;
+
           // alert("Lưu chapter thành công!");
 
         } 
@@ -238,12 +242,21 @@ export default {
           };
           await chapterApi.insert(newChapter);
           me.chapters.push(newChapter);
+
+          
+          // Hiển thị dialog thành công
+          me.dialogMessage = "Thêm chapter thành công!";
+          me.dialogType = "success";
+          me.showDialog = true;
         }
 
         me.selectChapter(null);
       } catch (error) {
           console.error("Lỗi khi lưu chapter:", error);
-          console.log("Backend trả về:", error.response?.data);
+          // Hiển thị dialog lỗi
+          this.dialogMessage = "Lưu chapter thất bại!";
+          this.dialogType = "error";
+          this.showDialog = true;
       }
     },
 
@@ -291,9 +304,17 @@ export default {
         }
 
         me.selectChapter(null);
+         // Hiển thị dialog thành công
+          me.dialogMessage = "Xóa chapter thành công!";
+          me.dialogType = "success";
+          me.showDialog = true;
 
       } catch (error) {
         console.error("Lỗi khi xóa chapter:", error);
+         // Hiển thị dialog thành công
+          me.dialogMessage = "Lỗi xóa chapter!";
+          me.dialogType = "error";
+          me.showDialog = true;
       }
     },
 
@@ -310,8 +331,6 @@ export default {
         query: { page: page }  
       });
     }
-
-
   },
 };
 </script>
@@ -496,4 +515,6 @@ export default {
 .btn-delete:hover {
   background-color: #d9363e;
 }
+
+
 </style>

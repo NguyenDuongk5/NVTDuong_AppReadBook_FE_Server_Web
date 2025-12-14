@@ -1,10 +1,10 @@
 <template>
-  <aside class="side-bar" :class="{ collapsed: collapsed }">
+  <aside class="side-bar" :class="{ collapsed }">
     <div class="s">
       <div class="logo"></div>
       <h2 class="name-web" v-if="!collapsed">MangaAdmin</h2>
     </div>
-    
+
     <nav class="nav">
       <router-link to="/" class="nav-item">
         <div class="img logo-home"></div>
@@ -17,23 +17,26 @@
       </router-link>
 
       <!-- Chapter list -->
-      <div class="chapter-list" v-if="chapters && chapters.length">
+      <div class="chapter-list" v-if="chapters?.length">
         <h4 v-if="!collapsed" class="chapter-title">Chapters</h4>
         <ul>
-          <li v-for="c in chapters" :key="c.chapter_id"
-              :class="{ active: selectedChapter?.chapter_id === c.chapter_id }"
-              @click="$emit('select-chapter', c)">
+          <li
+            v-for="c in chapters"
+            :key="c.chapter_id"
+            :class="{ active: selectedChapter?.chapter_id === c.chapter_id }"
+            @click="$emit('select-chapter', c)"
+          >
             <span v-if="!collapsed">{{ c.chapter_title }}</span>
             <div v-else class="dot"></div>
           </li>
         </ul>
       </div>
 
-
       <a href="#" class="nav-item">
         <div class="img logo-users"></div>
         <span v-if="!collapsed">Quản lý người dùng</span>
       </a>
+
       <a href="#" class="nav-item">
         <div class="img logo-setting"></div>
         <span v-if="!collapsed">Cài đặt</span>
@@ -50,7 +53,10 @@ export default {
     chapters: Array,
     selectedChapter: Object
   },
-  emits: ['select-chapter']
+  emits: ['select-chapter'],
+  methods: {
+  }
+
 }
 </script>
 

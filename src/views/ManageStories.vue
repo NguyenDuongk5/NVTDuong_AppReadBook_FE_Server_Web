@@ -5,8 +5,32 @@
       <!-- Nút thêm truyện -->
       <base-button type="primary" @click="handleAddNew">+ Thêm truyện</base-button>
     </div>
-    <!-- Bảng quản lý truyện -->
-    <div class="manga-table">
+    <!-- Search history: nằm NGAY dưới ô search -->
+    <div class="search-history" v-if="searchHistory.length && keyword">
+      <span class="label">Lịch sử:</span>
+
+      <div v-for="k in searchHistory" :key="k" class="history-item">
+        <span class="text" @click="onSelectHistory(k)">
+          {{ k }}
+        </span>
+        <span class="remove" @click="removeHistory(k)">
+          ❌
+        </span>
+      </div>
+       <button
+      v-if="searchHistory.length"
+      class="clear-all"
+      @click="clearHistory"
+    >
+      Xóa tất cả
+    </button>
+    </div>
+    <!-- Nếu có keyword → render FilteredMangas -->
+    <FilteredMangas v-if="keyword" :keyword="keyword" :mangas="filteredMangas" @select="goToChapters" @select-history="onSelectHistory"/>
+    
+
+    <!-- Nếu không có keyword → render table -->
+    <div v-else class="manga-table">
       <table>
         <thead>
           <tr>
@@ -21,7 +45,10 @@
         </thead>
         <!-- Danh sách truyện trong bảng -->
         <tbody>
-          <tr v-for="(m, index) in mangas" :key="m.manga_id" >
+          <!-- <tr v-for="(m, index) in mangas" :key="m.manga_id"> -->
+            <tr v-for="(m, index) in pagedMangas" :key="m.manga_id">
+
+
             <!-- Tên truyện, tác giả, ngày tạo, thể loại, sẵn hình bìa-->
             <td class="border" style="text-align: center" @click="goToChapters(m)">{{ indexManga(index) }}</td>
             <td class="border" @click="goToChapters(m)">{{ m.manga_title }}</td>
@@ -47,7 +74,7 @@
     </div>
 
     <!-- Phân trang -->
-    <div class="pagination-example">
+    <div class="pagination-example" v-if="!keyword">
       <span class="pagination-info">
         Hiển thị 
         {{ startIndex }} - {{ endIndex }} / {{ total }}
@@ -75,13 +102,23 @@
       />
     </div>
   </div>
+  <BaseDialog
+    v-if="!keyword"
+    v-model:show="showDialog"
+    :message="dialogMessage"
+    :typeDialog="dialogType"
+  />
+  
 </template>
 
 <script>
 import BaseButton from "@/components/base/BaseButton.vue";
+import BaseDialog from "@/components/base/BaseDialog.vue";
 import BasePaging from "@/components/base/BasePaging.vue";
+import FilteredMangas from "@/views/FilteredMangas.vue";
 import AddStory from "@/views/AddStory.vue";
 import ChapterManager from "@/views/ChapterManager.vue";
+
 import { mangaApi } from "@/api/mangaApi";
 import categoryApi from "@/api/categoryApi.js";
 import { chapterApi } from "@/api/chapterApi";
@@ -89,14 +126,31 @@ import { chapterApi } from "@/api/chapterApi";
 
 export default {
   name: "ManageStories",
+  emits: ["select-chapter", "select-history"],
   components: {
     BaseButton,
     AddStory,
     BasePaging,
+    BaseDialog,
+    FilteredMangas,
   },
-
+  props: {
+    chapters: {
+      type: Array,
+      default: () => []
+    },
+    selectedChapter: {
+      type: Object,
+      default: null
+    },
+    keyword: {
+      type: String,
+      default: ''
+    }
+  },
   data() {
     return {
+      keywordLocal: "",
       openForm: false,
       mangas: [],
       total: 0,
@@ -106,21 +160,46 @@ export default {
       selectedImage: null,
       editingManga: null,
       index: 0,   // truyện đang chọn
-    };
+      // dialog
+      showDialog: false,
+      dialogMessage: "",
+      dialogType: "success",
+      selectedManga: null,
+      searchHistory: [],
+      };
   },
 
   async mounted() {
     const me = this;
     this.currentPage = Number(this.$route.query.page) || 1;
     await me.loadMangas();
+    this.loadSearchHistory();
   },
 
-  /**
-   * Tạo biến startIndex, endIndex để hiển thị số truyện trong bảng
-   * author: NvtDuong
-   * createdDate: 25/11/2025
-   */
   computed: {
+    /**
+     * Lấy danh sách truyện theo phân trang
+     * author: NvtDuong
+     * createdDate: 13/12/2025
+     */
+    pagedMangas() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      const end = start + this.pageSize;
+      return this.filteredMangas.slice(start, end);
+    },
+    /**
+     * Lọc danh sách truyện theo keyword
+     * author: NvtDuong
+     * createdDate: 13/12/2025
+     */
+    filteredMangas() {
+      if (!this.keyword) return this.mangas;
+      const key = this.keyword.toLowerCase();
+      return this.mangas.filter(m =>
+        m.manga_title.toLowerCase().includes(key) ||
+        m.manga_author.toLowerCase().includes(key)
+      );
+    },
     startIndex() {
       return (this.currentPage - 1) * this.pageSize + 1;
     },
@@ -131,45 +210,50 @@ export default {
   
 
   methods: {
+    /**
+     * Khi chọn một truyện trên table sử dụng emit select-chapter
+     * @param chapter 
+     */
+    selectChapter(chapter) {
+      this.$emit("select-chapter", chapter);
+    },
     /** Tải danh sách truyện từ API, gắn tên thể loại cho từng truyện
      * author: NvtDuong
      * createdDate: 07/11/25
      */
     async loadMangas() {
-      const me = this;
       try {
-        // Gọi API song song: danh sách truyện + danh sách thể loại
         const [res, categoryRes] = await Promise.all([
-          mangaApi.paging(me.currentPage, me.pageSize),
+          mangaApi.getAll(), // load tất cả truyện
           categoryApi.getAll()
         ]);
-        // Lấy dữ liệu phân trang
-        const dataLayer = res.data.data || {};
-        me.mangas = dataLayer.data || res.data.data.data || [];
-        me.total = dataLayer.total_record || res.data.total_record || 0;
 
+        let mangas = res.data || [];
         const categories = categoryRes.data || [];
 
-        // Map id -> tên thể loại
+        // Map category id -> name
         const categoryMap = {};
-        categories.forEach(c => {
-          categoryMap[c.category_id] = c.category_name;
-        });
+        categories.forEach(c => categoryMap[c.category_id] = c.category_name);
 
-        // Gắn tên thể loại vào mỗi manga
-        me.mangas = me.mangas.map(m => {
+        // Gắn tên thể loại
+        mangas = mangas.map(m => {
           if (m.list_category_id) {
-            const ids = m.list_category_id.split(",").filter(id => id); // tách string -> array
-            m.category_names = ids.map(id => categoryMap[id]).filter(Boolean).join(", "); // array -> string tên thể loại
+            const ids = m.list_category_id.split(",").filter(id => id);
+            m.category_names = ids.map(id => categoryMap[id]).filter(Boolean).join(", ");
           } else {
             m.category_names = "";
           }
           return m;
         });
+
+        this.mangas = mangas;
+        this.total = mangas.length;
+
       } catch (err) {
         console.error("Lỗi tải danh sách truyện:", err);
       }
     },
+    /// quay lới trang truyện
     backToMangas() {
       this.selectedManga = null;
     },
@@ -179,14 +263,8 @@ export default {
      */
     async onPageChange(page) {
       this.currentPage = page;
-
-      // Cập nhật URL query
-      this.$router.push({
-        name: "truyen",
-        query: { page: page }
-      });
-
-      await this.loadMangas();
+      this.$router.push({ name: "truyen", query: { page } });
+      window.scrollTo({ top: 0, behavior: "smooth" }); // scroll lên đầu
     },
 
     /** Mở form thêm truyện mới
@@ -219,8 +297,9 @@ export default {
       try {
         const res = await mangaApi.delete(mangaId);
         if (res.status === 200) {
-          alert("Xóa truyện thành công!");
-          // load lại danh sách sau khi xóa
+          me.dialogMessage = "Xóa truyện thành công!";
+          me.dialogType = "success"; 
+          me.showDialog = true;
           await me.loadMangas();
         } else {
           alert("Xóa thất bại!");
@@ -267,10 +346,20 @@ export default {
     },
 
     /** Đóng form */
-    closeForm() {
+    closeForm(dialogInfo) {
       const me = this;
       me.openForm = false;
       me.editingManga = null;
+
+      if (dialogInfo) {
+        this.dialogMessage = dialogInfo.message;
+        this.dialogType = dialogInfo.type || "success";
+        this.showDialog = true;
+
+        setTimeout(() => {
+          this.showDialog = false;
+        }, 5000); // tự ẩn sau 1.2s
+      }
     },
     goToChapters(manga) {
       this.$router.push({
@@ -284,6 +373,40 @@ export default {
     },
     indexManga(index) {
       return (this.currentPage - 1) * this.pageSize + index + 1;
+    },
+    loadSearchHistory() {
+      const data = localStorage.getItem("searchHistory");
+      this.searchHistory = data ? JSON.parse(data) : [];
+    },
+
+    saveSearch(keyword) {
+      if (!keyword) return;
+
+      let history = this.searchHistory.filter(k => k !== keyword);
+      history.unshift(keyword);
+
+      if (history.length > 5) history.length = 5;
+
+      this.searchHistory = history;
+      localStorage.setItem("searchHistory", JSON.stringify(history));
+    },
+
+    removeHistory(k) {
+      this.searchHistory = this.searchHistory.filter(x => x !== k);
+      localStorage.setItem("searchHistory", JSON.stringify(this.searchHistory));
+    },
+    onSelectHistory(k) {
+      this.$emit("search", k); // đẩy lên App.vue
+    },
+     clearHistory() {
+        this.searchHistory = [];
+        localStorage.removeItem("search_history");
+      }
+  },
+
+  watch: {
+    keyword(newVal) {
+      this.saveSearch(newVal);
     }
   },
 };
@@ -294,7 +417,7 @@ export default {
 <style scoped>
 .manga-manager {
   background: #fff;
-  padding: 0 20px;
+  padding: 10px 20px;
   border-radius: 10px;
   margin-top: 60px;
 }
@@ -373,12 +496,22 @@ export default {
   box-sizing: border-box;
 
 }
+.ellipsis {
+  white-space: nowrap;        /* không xuống dòng */
+  overflow: hidden;           /* ẩn phần dư */
+  text-overflow: ellipsis;    /* hiện ... */
+}
 
 
 .manga-table td {
+  max-width: 200px;
   height: 48px;
   padding: 0 20px;
   border-bottom: 1px solid #e5e7eb;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+
 }
 
 .manga-table tr:nth-child(even) {
@@ -458,4 +591,93 @@ export default {
   padding: 10px;
   align-items: center;
 }
+/* ===== SEARCH HISTORY ===== */
+.search-history {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px;
+  margin: 8px 0 14px;
+  background: #f8fbff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+}
+
+.search-history .label {
+  font-weight: 600;
+  color: #1e3a8a;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+/* mỗi item lịch sử */
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0ecff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  transition: all 0.2s ease;
+}
+
+/* hover nguyên item */
+.history-item:hover {
+  background: #c7ddff;
+}
+
+/* text keyword */
+.history-item .text {
+  cursor: pointer;
+  font-size: 13px;
+  color: #1e40af;
+  font-weight: 500;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* nút xóa */
+.history-item .remove {
+  cursor: pointer;
+  font-size: 12px;
+  color: #64748b;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+/* hover nút xóa */
+.history-item .remove:hover {
+  color: #dc2626;
+  transform: scale(1.15);
+}
+.clear-all{
+  cursor: pointer;
+  font-size: 12px;
+  color: #64748b;
+  transition: color 0.2s ease, transform 0.15s ease;
+  border: none;
+  background: transparent;
+}
+.clear-all:hover{
+  color: #dc2626;
+}
+/* mobile responsive */
+@media (max-width: 768px) {
+  .search-history {
+    padding: 8px 10px;
+  }
+
+  .history-item {
+    padding: 3px 8px;
+  }
+
+  .history-item .text {
+    max-width: 100px;
+    font-size: 12px;
+  }
+}
+
+
 </style>
